@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>quickmath</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <div class="particles" id="particles"></div>
+
+  <div class="app">
+    <header>
+      <div class="logo" id="logoBtn">quick<span>math</span></div>
+      <nav class="nav">
+        <button class="mute-btn" id="muteBtn" title="toggle sound">♪</button>
+        <button class="nav-btn" id="lbNavBtn">leaderboard</button>
+      </nav>
+    </header>
+
+    <main>
+      <div class="controls">
+        <div class="controls-group">
+          <button class="ctrl-btn active" data-type="time" data-val="15">15s</button>
+          <button class="ctrl-btn" data-type="time" data-val="30">30s</button>
+          <button class="ctrl-btn" data-type="time" data-val="60">60s</button>
+          <button class="ctrl-btn" data-type="time" data-val="120">120s</button>
+          <button class="ctrl-btn" data-type="time" data-val="zen">zen</button>
+        </div>
+        <div class="controls-group">
+          <button class="ctrl-btn active" data-type="diff" data-val="easy">easy</button>
+          <button class="ctrl-btn" data-type="diff" data-val="medium">med</button>
+          <button class="ctrl-btn" data-type="diff" data-val="hard">hard</button>
+          <button class="ctrl-btn" data-type="diff" data-val="mixed">mixed</button>
+        </div>
+        <div class="controls-group">
+          <button class="ctrl-btn active" data-type="op" data-val="all">all</button>
+          <button class="ctrl-btn" data-type="op" data-val="add">+</button>
+          <button class="ctrl-btn" data-type="op" data-val="sub">−</button>
+          <button class="ctrl-btn" data-type="op" data-val="mul">×</button>
+          <button class="ctrl-btn" data-type="op" data-val="div">÷</button>
+        </div>
+      </div>
+
+      <div class="game-area" id="gameArea">
+        <div class="stats-bar">
+          <div class="timer-display hidden" id="timerDisplay">15</div>
+          <div class="right-stats">
+            <div class="streak-badge" id="streakBadge">
+              <span class="streak-icon">🔥</span>
+              <span class="streak-val" id="streakVal">0</span>
+              <span class="streak-lbl">streak</span>
+            </div>
+            <div class="score-display">
+              <div class="stat">
+                <div class="stat-value" id="correctCount">0</div>
+                <div class="stat-label">correct</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value" id="wrongCount">0</div>
+                <div class="stat-label">wrong</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-fill" id="progressFill" style="width:100%"></div>
+        </div>
+
+        <div class="question-wrapper">
+          <div class="difficulty-badge" id="diffBadge"></div>
+          <div class="question pop" id="questionEl">ready?</div>
+        </div>
+
+        <div class="input-wrapper">
+          <input type="text" inputmode="numeric" class="answer-input" id="answerInput" placeholder="—"
+            autocomplete="off" />
+        </div>
+
+        <div class="hint" id="hintEl">start typing to begin</div>
+      </div>
+
+      <div class="results-screen" id="resultsScreen">
+        <div class="results-title" id="resultsTitle">nice <span>work</span></div>
+        <div class="results-grid">
+          <div class="result-card">
+            <div class="result-val" id="resCorrect">—</div>
+            <div class="result-lbl">correct</div>
+          </div>
+          <div class="result-card">
+            <div class="result-val" id="resWrong">—</div>
+            <div class="result-lbl">wrong</div>
+          </div>
+          <div class="result-card">
+            <div class="result-val" id="resAccuracy">—</div>
+            <div class="result-lbl">accuracy</div>
+          </div>
+          <div class="result-card">
+            <div class="result-val" id="resMpm">—</div>
+            <div class="result-lbl">per min</div>
+          </div>
+          <div class="result-card">
+            <div class="result-val gold" id="resBestStreak">—</div>
+            <div class="result-lbl">best streak</div>
+          </div>
+        </div>
+
+        <div class="leaderboard" id="leaderboard">
+          <div class="lb-header">
+            <span class="lb-title">leaderboard</span>
+            <span class="lb-subtitle" id="lbMode">15s · easy · all</span>
+          </div>
+          <div id="lbRows"></div>
+        </div>
+
+        <div class="results-actions">
+          <button class="restart-btn" id="restartBtn">restart</button>
+          <button class="restart-btn" id="newGameBtn">new settings</button>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="footer-item"><span class="key">tab</span> restart</div>
+      <div class="footer-item"><span class="key">esc</span> cancel</div>
+      <div class="footer-item"><span class="key">enter</span> submit</div>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
