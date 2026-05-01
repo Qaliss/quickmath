@@ -1,974 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>quickmath</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0a0a0f;
-    --bg2: #0f0f16;
-    --bg3: #13131c;
-    --surface: #16161f;
-    --surface2: #1c1c28;
-    --border: #1a1a26;
-    --border2: #22223a;
-    --purple: #8b5cf6;
-    --purple-dim: #5b3fa6;
-    --purple-glow: rgba(139, 92, 246, 0.18);
-    --purple-faint: rgba(139, 92, 246, 0.06);
-    --text: #e2e2f0;
-    --text-dim: #4a4a62;
-    --text-faint: #2e2e45;
-    --correct: #6ee7b7;
-    --error: #f87171;
-    --mono: 'DM Mono', monospace;
-    --display: 'Syne', sans-serif;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--mono);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.4;
-  }
-
-  body::after {
-    content: '';
-    position: fixed;
-    top: -40%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80vw;
-    height: 80vh;
-    background: radial-gradient(ellipse, rgba(139,92,246,0.04) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .app {
-    position: relative;
-    z-index: 1;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 26px 48px;
-    border-bottom: 1px solid var(--border);
-    background: rgba(10,10,15,0.8);
-    backdrop-filter: blur(12px);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    animation: fadeDown 0.6s ease both;
-  }
-
-  @keyframes fadeDown {
-    from { opacity: 0; transform: translateY(-12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .logo {
-    font-family: var(--display);
-    font-size: 19px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    cursor: pointer;
-    transition: opacity 0.2s;
-    user-select: none;
-  }
-  .logo:hover { opacity: 0.75; }
-  .logo span { color: var(--purple); }
-
-  .nav {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-  }
-
-  .nav-btn {
-    background: none;
-    border: none;
-    color: var(--text-dim);
-    font-family: var(--mono);
-    font-size: 13px;
-    cursor: pointer;
-    transition: color 0.2s;
-    letter-spacing: 0.04em;
-  }
-  .nav-btn:hover { color: var(--text); }
-
-  main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 24px;
-    gap: 44px;
-    animation: fadeUp 0.8s ease 0.2s both;
-  }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .controls {
-    display: flex;
-    align-items: center;
-    gap: 0;
-  }
-
-  .controls-group {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    padding: 0 20px;
-    border-right: 1px solid var(--border2);
-  }
-  .controls-group:last-child { border-right: none; padding-right: 0; }
-  .controls-group:first-child { padding-left: 0; }
-
-  .ctrl-btn {
-    background: none;
-    border: none;
-    color: var(--text-faint);
-    font-family: var(--mono);
-    font-size: 13px;
-    padding: 5px 10px;
-    cursor: pointer;
-    transition: color 0.2s, text-shadow 0.2s;
-    letter-spacing: 0.04em;
-  }
-  .ctrl-btn:hover {
-    color: var(--text-dim);
-    text-shadow: 0 0 12px rgba(139,92,246,0.3);
-  }
-  .ctrl-btn.active {
-    color: var(--purple);
-    text-shadow: 0 0 16px rgba(139,92,246,0.5);
-  }
-
-  .game-area {
-    width: 100%;
-    max-width: 720px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 36px;
-  }
-
-  .stats-bar {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 36px;
-  }
-
-  .timer-display {
-    font-size: 28px;
-    font-weight: 300;
-    color: var(--purple);
-    letter-spacing: -0.02em;
-    min-width: 60px;
-    transition: color 0.3s, text-shadow 0.3s;
-    text-shadow: 0 0 20px rgba(139,92,246,0.4);
-  }
-  .timer-display.urgent { color: var(--error); text-shadow: 0 0 20px rgba(248,113,113,0.4); }
-  .timer-display.hidden { opacity: 0; pointer-events: none; }
-
-  .right-stats {
-    display: flex;
-    align-items: center;
-    gap: 28px;
-  }
-
-  .streak-badge {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  .streak-badge.visible { opacity: 1; }
-
-  .streak-icon { font-size: 14px; animation: pulse 1s ease infinite; }
-  @keyframes pulse {
-    0%,100% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-  }
-
-  .streak-val {
-    font-size: 18px;
-    font-weight: 400;
-    color: #fbbf24;
-    text-shadow: 0 0 16px rgba(251,191,36,0.4);
-  }
-
-  .streak-lbl {
-    font-size: 11px;
-    color: var(--text-faint);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .score-display { display: flex; gap: 24px; }
-
-  .stat {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 2px;
-  }
-  .stat-value { font-size: 18px; font-weight: 400; color: var(--text); }
-  .stat-label { font-size: 11px; color: var(--text-faint); letter-spacing: 0.06em; text-transform: uppercase; }
-
-  .progress-bar {
-    width: 100%;
-    height: 1px;
-    background: var(--border2);
-    border-radius: 1px;
-    overflow: visible;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  .progress-bar.visible { opacity: 1; }
-
-  .progress-fill {
-    height: 100%;
-    background: var(--purple);
-    border-radius: 1px;
-    transition: width 1s linear;
-    box-shadow: 0 0 8px rgba(139,92,246,0.6);
-  }
-
-  .question-wrapper {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .difficulty-badge {
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-faint);
-    transition: color 0.3s;
-    height: 16px;
-  }
-  .difficulty-badge.easy { color: rgba(110,231,183,0.5); }
-  .difficulty-badge.medium { color: rgba(139,92,246,0.5); }
-  .difficulty-badge.hard { color: rgba(248,113,113,0.5); }
-
-  .question {
-    font-family: var(--display);
-    font-size: clamp(44px, 9vw, 80px);
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    text-align: center;
-    line-height: 1;
-    color: var(--text);
-  }
-
-  .question.pop {
-    animation: questionPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  }
-
-  @keyframes questionPop {
-    0% { opacity: 0; transform: scale(0.88) translateY(6px); }
-    100% { opacity: 1; transform: scale(1) translateY(0); }
-  }
-
-  .input-wrapper {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .answer-input {
-    width: 100%;
-    max-width: 440px;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--border2);
-    outline: none;
-    font-family: var(--mono);
-    font-size: 36px;
-    font-weight: 300;
-    color: var(--text);
-    text-align: center;
-    padding: 12px 0;
-    caret-color: var(--purple);
-    letter-spacing: 0.05em;
-    transition: border-color 0.2s;
-    -moz-appearance: textfield;
-  }
-  .answer-input::-webkit-outer-spin-button,
-  .answer-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-  .answer-input:focus { border-color: rgba(139,92,246,0.4); }
-  .answer-input.wrong { border-color: rgba(248,113,113,0.5); color: var(--error); animation: shake 0.3s ease; }
-  .answer-input.right { border-color: rgba(110,231,183,0.5); color: var(--correct); }
-
-  @keyframes shake {
-    0%,100% { transform: translateX(0); }
-    25% { transform: translateX(-8px); }
-    75% { transform: translateX(8px); }
-  }
-
-  .hint {
-    font-size: 13px;
-    color: var(--text-faint);
-    letter-spacing: 0.04em;
-    text-align: center;
-    height: 20px;
-    transition: opacity 0.4s;
-  }
-  .hint.hidden { opacity: 0; }
-
-  .float-score {
-    position: fixed;
-    font-family: var(--mono);
-    font-size: 20px;
-    font-weight: 300;
-    pointer-events: none;
-    z-index: 999;
-    animation: floatScore 0.8s ease forwards;
-  }
-  @keyframes floatScore {
-    0% { opacity: 1; transform: translateY(0) scale(1); }
-    100% { opacity: 0; transform: translateY(-40px) scale(0.8); }
-  }
-
-  .results-screen {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 40px;
-    width: 100%;
-    max-width: 720px;
-    animation: fadeUp 0.6s ease both;
-  }
-  .results-screen.visible { display: flex; }
-
-  .results-title {
-    font-family: var(--display);
-    font-size: 44px;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    color: var(--text);
-  }
-  .results-title span { color: var(--purple); }
-
-  .results-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 1px;
-    background: var(--border);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    width: 100%;
-  }
-
-  .result-card {
-    background: var(--surface);
-    padding: 24px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    transition: background 0.2s;
-  }
-  .result-card:hover { background: var(--surface2); }
-
-  .result-val {
-    font-family: var(--display);
-    font-size: 36px;
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    color: var(--purple);
-    line-height: 1;
-  }
-  .result-val.gold { color: #fbbf24; text-shadow: 0 0 16px rgba(251,191,36,0.3); }
-
-  .result-lbl { font-size: 11px; color: var(--text-dim); letter-spacing: 0.06em; text-transform: uppercase; }
-
-  .leaderboard {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-  }
-
-  .lb-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 20px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .lb-title { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
-  .lb-subtitle { font-size: 11px; color: var(--text-faint); letter-spacing: 0.04em; }
-
-  .lb-row {
-    display: grid;
-    grid-template-columns: 28px 1fr 60px 60px 60px 70px;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 20px;
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    transition: background 0.15s;
-    font-size: 13px;
-  }
-  .lb-row:last-child { border-bottom: none; }
-  .lb-row:hover { background: var(--surface); }
-  .lb-row.current-run { background: var(--purple-faint); border-left: 2px solid var(--purple); }
-
-  .lb-rank { color: var(--text-faint); font-size: 12px; text-align: center; }
-  .lb-rank.gold { color: #fbbf24; }
-  .lb-rank.silver { color: #94a3b8; }
-  .lb-rank.bronze { color: #b45309; }
-
-  .lb-date { color: var(--text-dim); }
-  .lb-val { color: var(--text); text-align: right; }
-  .lb-val.highlight { color: var(--purple); }
-  .lb-val.streak-col { color: #fbbf24; }
-
-  .results-actions { display: flex; gap: 12px; }
-
-  .restart-btn {
-    background: none;
-    border: 1px solid var(--border2);
-    color: var(--text-dim);
-    font-family: var(--mono);
-    font-size: 14px;
-    padding: 12px 32px;
-    border-radius: 10px;
-    cursor: pointer;
-    letter-spacing: 0.04em;
-    transition: all 0.2s;
-  }
-  .restart-btn:hover {
-    color: var(--purple);
-    border-color: var(--purple-dim);
-    box-shadow: 0 0 20px var(--purple-glow);
-    text-shadow: 0 0 12px rgba(139,92,246,0.5);
-  }
-
-  .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
-  .particle {
-    position: absolute;
-    width: 1.5px;
-    height: 1.5px;
-    background: var(--purple);
-    border-radius: 50%;
-    opacity: 0;
-    animation: floatParticle var(--dur) ease-in infinite;
-    animation-delay: var(--delay);
-    left: var(--x);
-    top: 100%;
-  }
-  @keyframes floatParticle {
-    0% { opacity: 0; transform: translateY(0) scale(0); }
-    10% { opacity: 0.5; transform: translateY(-20px) scale(1); }
-    90% { opacity: 0.1; }
-    100% { opacity: 0; transform: translateY(-80vh) scale(0.3); }
-  }
-
-  footer {
-    padding: 18px 48px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 32px;
-    animation: fadeUp 0.8s ease 0.4s both;
-  }
-
-  .footer-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-faint); letter-spacing: 0.04em; }
-
-  .key {
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 4px;
-    padding: 2px 7px;
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-
-  .mute-btn {
-    background: none;
-    border: none;
-    color: var(--text-faint);
-    font-size: 14px;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: color 0.2s, opacity 0.2s;
-    line-height: 1;
-  }
-  .mute-btn:hover { color: var(--text-dim); }
-  .mute-btn.muted { opacity: 0.3; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>quickmath</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
-<div class="particles" id="particles"></div>
+  <div class="particles" id="particles"></div>
 
-<div class="app">
-  <header>
-    <div class="logo" id="logoBtn">quick<span>math</span></div>
-    <nav class="nav">
-      <button class="mute-btn" id="muteBtn" title="toggle sound">♪</button>
-      <button class="nav-btn" id="lbNavBtn">leaderboard</button>
-    </nav>
-  </header>
+  <div class="app">
+    <header>
+      <div class="logo" id="logoBtn">quick<span>math</span></div>
+      <nav class="nav">
+        <button class="mute-btn" id="muteBtn" title="toggle sound">♪</button>
+        <button class="nav-btn" id="lbNavBtn">leaderboard</button>
+      </nav>
+    </header>
 
-  <main>
-    <div class="controls">
-      <div class="controls-group">
-        <button class="ctrl-btn active" data-type="time" data-val="15">15s</button>
-        <button class="ctrl-btn" data-type="time" data-val="30">30s</button>
-        <button class="ctrl-btn" data-type="time" data-val="60">60s</button>
-        <button class="ctrl-btn" data-type="time" data-val="120">120s</button>
-        <button class="ctrl-btn" data-type="time" data-val="zen">zen</button>
+    <main>
+      <div class="controls">
+        <div class="controls-group">
+          <button class="ctrl-btn active" data-type="time" data-val="15">15s</button>
+          <button class="ctrl-btn" data-type="time" data-val="30">30s</button>
+          <button class="ctrl-btn" data-type="time" data-val="60">60s</button>
+          <button class="ctrl-btn" data-type="time" data-val="120">120s</button>
+          <button class="ctrl-btn" data-type="time" data-val="zen">zen</button>
+        </div>
+        <div class="controls-group">
+          <button class="ctrl-btn active" data-type="diff" data-val="easy">easy</button>
+          <button class="ctrl-btn" data-type="diff" data-val="medium">med</button>
+          <button class="ctrl-btn" data-type="diff" data-val="hard">hard</button>
+          <button class="ctrl-btn" data-type="diff" data-val="mixed">mixed</button>
+        </div>
+        <div class="controls-group">
+          <button class="ctrl-btn active" data-type="op" data-val="all">all</button>
+          <button class="ctrl-btn" data-type="op" data-val="add">+</button>
+          <button class="ctrl-btn" data-type="op" data-val="sub">−</button>
+          <button class="ctrl-btn" data-type="op" data-val="mul">×</button>
+          <button class="ctrl-btn" data-type="op" data-val="div">÷</button>
+        </div>
       </div>
-      <div class="controls-group">
-        <button class="ctrl-btn active" data-type="diff" data-val="easy">easy</button>
-        <button class="ctrl-btn" data-type="diff" data-val="medium">med</button>
-        <button class="ctrl-btn" data-type="diff" data-val="hard">hard</button>
-        <button class="ctrl-btn" data-type="diff" data-val="mixed">mixed</button>
-      </div>
-      <div class="controls-group">
-        <button class="ctrl-btn active" data-type="op" data-val="all">all</button>
-        <button class="ctrl-btn" data-type="op" data-val="add">+</button>
-        <button class="ctrl-btn" data-type="op" data-val="sub">−</button>
-        <button class="ctrl-btn" data-type="op" data-val="mul">×</button>
-        <button class="ctrl-btn" data-type="op" data-val="div">÷</button>
-      </div>
-    </div>
 
-    <div class="game-area" id="gameArea">
-      <div class="stats-bar">
-        <div class="timer-display hidden" id="timerDisplay">15</div>
-        <div class="right-stats">
-          <div class="streak-badge" id="streakBadge">
-            <span class="streak-icon">🔥</span>
-            <span class="streak-val" id="streakVal">0</span>
-            <span class="streak-lbl">streak</span>
-          </div>
-          <div class="score-display">
-            <div class="stat">
-              <div class="stat-value" id="correctCount">0</div>
-              <div class="stat-label">correct</div>
+      <div class="game-area" id="gameArea">
+        <div class="stats-bar">
+          <div class="timer-display hidden" id="timerDisplay">15</div>
+          <div class="right-stats">
+            <div class="streak-badge" id="streakBadge">
+              <span class="streak-icon">🔥</span>
+              <span class="streak-val" id="streakVal">0</span>
+              <span class="streak-lbl">streak</span>
             </div>
-            <div class="stat">
-              <div class="stat-value" id="wrongCount">0</div>
-              <div class="stat-label">wrong</div>
+            <div class="score-display">
+              <div class="stat">
+                <div class="stat-value" id="correctCount">0</div>
+                <div class="stat-label">correct</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value" id="wrongCount">0</div>
+                <div class="stat-label">wrong</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="progress-bar" id="progressBar">
-        <div class="progress-fill" id="progressFill" style="width:100%"></div>
-      </div>
-
-      <div class="question-wrapper">
-        <div class="difficulty-badge" id="diffBadge"></div>
-        <div class="question pop" id="questionEl">ready?</div>
-      </div>
-
-      <div class="input-wrapper">
-        <input type="text" inputmode="numeric" class="answer-input" id="answerInput" placeholder="—" autocomplete="off"/>
-      </div>
-
-      <div class="hint" id="hintEl">start typing to begin</div>
-    </div>
-
-    <div class="results-screen" id="resultsScreen">
-      <div class="results-title" id="resultsTitle">nice <span>work</span></div>
-      <div class="results-grid">
-        <div class="result-card">
-          <div class="result-val" id="resCorrect">—</div>
-          <div class="result-lbl">correct</div>
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-fill" id="progressFill" style="width:100%"></div>
         </div>
-        <div class="result-card">
-          <div class="result-val" id="resWrong">—</div>
-          <div class="result-lbl">wrong</div>
+
+        <div class="question-wrapper">
+          <div class="difficulty-badge" id="diffBadge"></div>
+          <div class="question pop" id="questionEl">ready?</div>
         </div>
-        <div class="result-card">
-          <div class="result-val" id="resAccuracy">—</div>
-          <div class="result-lbl">accuracy</div>
+
+        <div class="input-wrapper">
+          <input type="text" inputmode="numeric" class="answer-input" id="answerInput" placeholder="—"
+            autocomplete="off" />
         </div>
-        <div class="result-card">
-          <div class="result-val" id="resMpm">—</div>
-          <div class="result-lbl">per min</div>
-        </div>
-        <div class="result-card">
-          <div class="result-val gold" id="resBestStreak">—</div>
-          <div class="result-lbl">best streak</div>
-        </div>
+
+        <div class="hint" id="hintEl">start typing to begin</div>
       </div>
 
-      <div class="leaderboard" id="leaderboard">
-        <div class="lb-header">
-          <span class="lb-title">leaderboard</span>
-          <span class="lb-subtitle" id="lbMode">15s · easy · all</span>
+      <div class="results-screen" id="resultsScreen">
+        <div class="results-title" id="resultsTitle">nice <span>work</span></div>
+        <div class="results-grid">
+          <div class="result-card">
+            <div class="result-val" id="resCorrect">—</div>
+            <div class="result-lbl">correct</div>
+          </div>
+          <div class="result-card">
+            <div class="result-val" id="resWrong">—</div>
+            <div class="result-lbl">wrong</div>
+          </div>
+          <div class="result-card">
+            <div class="result-val" id="resAccuracy">—</div>
+            <div class="result-lbl">accuracy</div>
+          </div>
+          <div class="result-card">
+            <div class="result-val" id="resMpm">—</div>
+            <div class="result-lbl">per min</div>
+          </div>
+          <div class="result-card">
+            <div class="result-val gold" id="resBestStreak">—</div>
+            <div class="result-lbl">best streak</div>
+          </div>
         </div>
-        <div id="lbRows"></div>
+
+        <div class="leaderboard" id="leaderboard">
+          <div class="lb-header">
+            <span class="lb-title">leaderboard</span>
+            <span class="lb-subtitle" id="lbMode">15s · easy · all</span>
+          </div>
+          <div id="lbRows"></div>
+        </div>
+
+        <div class="results-actions">
+          <button class="restart-btn" id="restartBtn">restart</button>
+          <button class="restart-btn" id="newGameBtn">new settings</button>
+        </div>
       </div>
+    </main>
 
-      <div class="results-actions">
-        <button class="restart-btn" id="restartBtn">restart</button>
-        <button class="restart-btn" id="newGameBtn">new settings</button>
-      </div>
-    </div>
-  </main>
+    <footer>
+      <div class="footer-item"><span class="key">tab</span> restart</div>
+      <div class="footer-item"><span class="key">esc</span> cancel</div>
+      <div class="footer-item"><span class="key">enter</span> submit</div>
+    </footer>
+  </div>
 
-  <footer>
-    <div class="footer-item"><span class="key">tab</span> restart</div>
-    <div class="footer-item"><span class="key">esc</span> cancel</div>
-    <div class="footer-item"><span class="key">enter</span> submit</div>
-  </footer>
-</div>
-
-<script>
-// === Audio ===
-let audioCtx = null;
-let muted = false;
-
-function getCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  return audioCtx;
-}
-
-function playTone(freq, type, duration, vol = 0.15) {
-  if (muted) return;
-  try {
-    const ctx = getCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, ctx.currentTime);
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.005);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + duration);
-  } catch(e) {}
-}
-
-function playCorrect() { playTone(523.25,'sine',0.12,0.12); setTimeout(()=>playTone(783.99,'sine',0.15,0.1),60); }
-function playWrong() { playTone(220,'sawtooth',0.15,0.08); }
-function playStreak(s) { const n=[523,659,784,1047]; playTone(n[Math.min(Math.floor((s-1)/3),3)],'sine',0.2,0.12); }
-function playComplete() { [523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',0.25,0.1),i*80)); }
-function playNewBest() { [784,1047,1319].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',0.3,0.12),i*100)); }
-function playTick() { playTone(880,'sine',0.05,0.04); }
-
-const muteBtn = document.getElementById('muteBtn');
-muteBtn.addEventListener('click', () => {
-  muted = !muted;
-  muteBtn.classList.toggle('muted', muted);
-  muteBtn.style.opacity = muted ? '0.3' : '1';
-});
-
-// === State ===
-let state = {
-  timeLimit: 15, isZen: false, difficulty: 'easy', ops: 'all',
-  running: false, started: false, timeLeft: 15,
-  correct: 0, wrong: 0, streak: 0, bestStreak: 0,
-  currentAnswer: null, timerInterval: null, startTime: null,
-};
-
-// === Storage ===
-function lbKey() {
-  return `qm_lb_${state.isZen?'zen':state.timeLimit+'s'}_${state.difficulty}_${state.ops}`;
-}
-function loadScores() {
-  try { return JSON.parse(localStorage.getItem(lbKey())||'[]'); } catch { return []; }
-}
-function saveScore(entry) {
-  let scores = loadScores();
-  scores.push(entry);
-  scores.sort((a,b)=>b.correct-a.correct||b.accuracy-a.accuracy);
-  scores = scores.slice(0,10);
-  try { localStorage.setItem(lbKey(), JSON.stringify(scores)); } catch {}
-  return scores;
-}
-
-// === DOM ===
-const $ = id => document.getElementById(id);
-const questionEl = $('questionEl'), answerInput = $('answerInput');
-const timerDisplay = $('timerDisplay'), progressFill = $('progressFill');
-const progressBar = $('progressBar'), diffBadge = $('diffBadge');
-const correctCount = $('correctCount'), wrongCount = $('wrongCount');
-const hintEl = $('hintEl'), gameArea = $('gameArea');
-const resultsScreen = $('resultsScreen');
-const streakBadge = $('streakBadge'), streakVal = $('streakVal');
-
-// Particles
-const particlesEl = $('particles');
-for (let i=0;i<16;i++){
-  const p=document.createElement('div');
-  p.className='particle';
-  p.style.setProperty('--x',Math.random()*100+'vw');
-  p.style.setProperty('--dur',(10+Math.random()*14)+'s');
-  p.style.setProperty('--delay',(Math.random()*18)+'s');
-  particlesEl.appendChild(p);
-}
-
-// === Question Gen ===
-function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
-
-function genQuestion(difficulty,ops){
-  const configs={
-    easy:[
-      ()=>{const a=rand(2,12),b=rand(2,12);return{q:`${a} + ${b}`,ans:a+b,diff:'easy',sym:'+'};},
-      ()=>{const b=rand(2,12),a=b+rand(1,10);return{q:`${a} − ${b}`,ans:a-b,diff:'easy',sym:'−'};},
-      ()=>{const a=rand(2,9),b=rand(2,9);return{q:`${a} × ${b}`,ans:a*b,diff:'easy',sym:'×'};},
-      ()=>{const b=rand(2,9),a=b*rand(2,9);return{q:`${a} ÷ ${b}`,ans:a/b,diff:'easy',sym:'÷'};},
-    ],
-    medium:[
-      ()=>{const a=rand(15,99),b=rand(15,99);return{q:`${a} + ${b}`,ans:a+b,diff:'medium',sym:'+'};},
-      ()=>{const b=rand(10,50),a=b+rand(10,60);return{q:`${a} − ${b}`,ans:a-b,diff:'medium',sym:'−'};},
-      ()=>{const a=rand(3,15),b=rand(3,15);return{q:`${a} × ${b}`,ans:a*b,diff:'medium',sym:'×'};},
-      ()=>{const b=rand(2,12),a=b*rand(3,15);return{q:`${a} ÷ ${b}`,ans:a/b,diff:'medium',sym:'÷'};},
-    ],
-    hard:[
-      ()=>{const a=rand(50,999),b=rand(50,999);return{q:`${a} + ${b}`,ans:a+b,diff:'hard',sym:'+'};},
-      ()=>{const b=rand(50,400),a=b+rand(50,500);return{q:`${a} − ${b}`,ans:a-b,diff:'hard',sym:'−'};},
-      ()=>{const a=rand(11,25),b=rand(11,25);return{q:`${a} × ${b}`,ans:a*b,diff:'hard',sym:'×'};},
-      ()=>{const b=rand(3,15),a=b*rand(5,20);return{q:`${a} ÷ ${b}`,ans:a/b,diff:'hard',sym:'÷'};},
-      ()=>{const a=rand(3,15);return{q:`${a}²`,ans:a*a,diff:'hard',sym:'×'};},
-    ],
-  };
-  const symMap={add:'+',sub:'−',mul:'×',div:'÷'};
-  const sym=ops!=='all'?symMap[ops]:null;
-  let pool=difficulty==='mixed'?[...configs.easy,...configs.medium,...configs.hard]:configs[difficulty];
-  if(sym){
-    for(let t=0;t<40;t++){
-      const r=pool[Math.floor(Math.random()*pool.length)]();
-      if(r.sym===sym||(ops==='mul'&&r.q.includes('²')))return r;
-    }
-  }
-  return pool[Math.floor(Math.random()*pool.length)]();
-}
-
-function spawnFloat(text,color='var(--correct)'){
-  const rect=answerInput.getBoundingClientRect();
-  const el=document.createElement('div');
-  el.className='float-score';
-  el.textContent=text;
-  el.style.color=color;
-  el.style.left=(rect.left+rect.width/2)+'px';
-  el.style.top=(rect.top-10)+'px';
-  document.body.appendChild(el);
-  setTimeout(()=>el.remove(),900);
-}
-
-// === Game ===
-function showQuestion(){
-  const q=genQuestion(state.difficulty,state.ops);
-  state.currentAnswer=q.ans;
-  diffBadge.textContent=q.diff;
-  diffBadge.className='difficulty-badge '+q.diff;
-  questionEl.className='question';
-  void questionEl.offsetWidth;
-  questionEl.className='question pop';
-  questionEl.textContent=q.q;
-  answerInput.value='';
-  answerInput.className='answer-input';
-}
-
-function startGame(){
-  if(state.running)return;
-  state.running=true; state.started=true;
-  state.correct=0; state.wrong=0; state.streak=0; state.bestStreak=0;
-  state.startTime=Date.now();
-  correctCount.textContent='0'; wrongCount.textContent='0';
-  streakVal.textContent='0'; hintEl.classList.add('hidden');
-  streakBadge.classList.remove('visible');
-
-  if(!state.isZen){
-    state.timeLeft=state.timeLimit;
-    timerDisplay.textContent=state.timeLeft;
-    timerDisplay.classList.remove('hidden','urgent');
-    progressBar.classList.add('visible');
-    progressFill.style.transition='none';
-    progressFill.style.width='100%';
-    setTimeout(()=>{
-      progressFill.style.transition=`width ${state.timeLimit}s linear`;
-      progressFill.style.width='0%';
-    },50);
-    state.timerInterval=setInterval(()=>{
-      state.timeLeft--;
-      timerDisplay.textContent=state.timeLeft;
-      if(state.timeLeft<=5){timerDisplay.classList.add('urgent');playTick();}
-      if(state.timeLeft<=0)endGame();
-    },1000);
-  } else {
-    timerDisplay.classList.add('hidden');
-    progressBar.classList.remove('visible');
-  }
-
-  showQuestion();
-  answerInput.focus();
-}
-
-function endGame(){
-  clearInterval(state.timerInterval);
-  state.running=false;
-  if(!state.isZen)playComplete();
-  const elapsed=(Date.now()-state.startTime)/60000;
-  const mpm=Math.round(state.correct/Math.max(elapsed,0.016));
-  const total=state.correct+state.wrong;
-  const acc=total===0?100:Math.round((state.correct/total)*100);
-  const entry={correct:state.correct,wrong:state.wrong,accuracy:acc,mpm,bestStreak:state.bestStreak,date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'}),isNew:true};
-  const scores=saveScore(entry);
-  if(scores[0].isNew&&state.correct>0)setTimeout(playNewBest,300);
-  $('resCorrect').textContent=state.correct;
-  $('resWrong').textContent=state.wrong;
-  $('resAccuracy').textContent=acc+'%';
-  $('resMpm').textContent=mpm;
-  $('resBestStreak').textContent=state.bestStreak;
-  const modeLabel=(state.isZen?'zen':state.timeLimit+'s')+' · '+state.difficulty+' · '+state.ops;
-  $('lbMode').textContent=modeLabel;
-  const lbRows=$('lbRows');
-  lbRows.innerHTML='';
-  if(scores.length===0){
-    lbRows.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-faint);font-size:13px;">no scores yet</div>';
-  } else {
-    scores.forEach((s,i)=>{
-      const row=document.createElement('div');
-      row.className='lb-row'+(s.isNew?' current-run':'');
-      const rc=i===0?'gold':i===1?'silver':i===2?'bronze':'';
-      const rs=i===0?'◆':i===1?'◇':i===2?'◈':(i+1);
-      row.innerHTML=`<span class="lb-rank ${rc}">${rs}</span><span class="lb-date">${s.date}</span><span class="lb-val highlight">${s.correct}</span><span class="lb-val">${s.accuracy}%</span><span class="lb-val streak-col">${s.bestStreak}🔥</span><span class="lb-val">${s.mpm}/min</span>`;
-      lbRows.appendChild(row);
-    });
-    setTimeout(()=>{
-      const cleaned=scores.map(s=>({...s,isNew:false}));
-      try{localStorage.setItem(lbKey(),JSON.stringify(cleaned));}catch{}
-    },100);
-  }
-  const titles=['nice work','well done','solid run','not bad'];
-  const t=titles[Math.floor(Math.random()*titles.length)].split(' ');
-  $('resultsTitle').innerHTML=`${t[0]} <span>${t[1]}</span>`;
-  gameArea.style.display='none';
-  resultsScreen.classList.add('visible');
-}
-
-function resetGame(){
-  clearInterval(state.timerInterval);
-  state.running=false; state.started=false; state.streak=0; state.bestStreak=0;
-  resultsScreen.classList.remove('visible');
-  gameArea.style.display='';
-  timerDisplay.classList.add('hidden');
-  timerDisplay.classList.remove('urgent');
-  progressBar.classList.remove('visible');
-  progressFill.style.width='100%';
-  correctCount.textContent='0'; wrongCount.textContent='0';
-  streakBadge.classList.remove('visible');
-  hintEl.classList.remove('hidden');
-  hintEl.textContent='start typing to begin';
-  questionEl.className='question pop';
-  questionEl.textContent='ready?';
-  diffBadge.textContent='';
-  answerInput.value='';
-  answerInput.className='answer-input';
-  answerInput.focus();
-}
-
-function submitAnswer(){
-  const raw=answerInput.value.trim();
-  const val=parseInt(raw,10);
-  if(raw===''||isNaN(val))return;
-  if(!state.running&&!state.started){startGame();return;}
-  if(val===state.currentAnswer){
-    state.correct++; state.streak++;
-    if(state.streak>state.bestStreak)state.bestStreak=state.streak;
-    correctCount.textContent=state.correct;
-    streakVal.textContent=state.streak;
-    streakBadge.classList.add('visible');
-    if(state.streak%3===0)playStreak(state.streak);else playCorrect();
-    spawnFloat('+1');
-    answerInput.classList.add('right');
-    setTimeout(()=>showQuestion(),140);
-  } else {
-    state.wrong++; state.streak=0;
-    wrongCount.textContent=state.wrong;
-    streakVal.textContent='0';
-    streakBadge.classList.remove('visible');
-    playWrong();
-    spawnFloat('✕','var(--error)');
-    answerInput.classList.add('wrong');
-    setTimeout(()=>{answerInput.classList.remove('wrong');answerInput.value='';},380);
-  }
-}
-
-// === Events ===
-answerInput.addEventListener('input',()=>{
-  if(!state.running&&!state.started&&answerInput.value.length>0)startGame();
-});
-answerInput.addEventListener('keydown',e=>{
-  if(e.key==='Enter'){e.preventDefault();submitAnswer();}
-});
-document.addEventListener('keydown',e=>{
-  if(e.key==='Tab'){e.preventDefault();resetGame();}
-  if(e.key==='Escape')resetGame();
-});
-
-document.querySelectorAll('.ctrl-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    const type=btn.dataset.type, val=btn.dataset.val;
-    document.querySelectorAll(`.ctrl-btn[data-type="${type}"]`).forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    if(type==='time'){state.isZen=val==='zen';state.timeLimit=state.isZen?0:parseInt(val);}
-    else if(type==='diff')state.difficulty=val;
-    else if(type==='op')state.ops=val;
-    resetGame();
-  });
-});
-
-$('restartBtn').addEventListener('click',resetGame);
-$('newGameBtn').addEventListener('click',resetGame);
-
-// Logo click → reset to game
-$('logoBtn').addEventListener('click', resetGame);
-
-answerInput.focus();
-</script>
+  <script src="script.js"></script>
 </body>
+
 </html>
